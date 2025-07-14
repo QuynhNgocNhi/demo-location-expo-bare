@@ -1,15 +1,31 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Text, View, Button, Alert, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, Button, Alert, SafeAreaView, Share } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { generateWordCode } from '../utils/wordCodeGenerator';
+import Compass from '../components/Compass';
+import LocationInfo from '../components/LocationInfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LocationTrackerScreen = ({ navigation }) => {
+const LocationTrackerScreen = ({ navigation, route }) => {
   const [location, setLocation] = useState(null);
   const [savedLocation, setSavedLocation] = useState(null);
   const [distance, setDistance] = useState(null);
   const [error, setError] = useState(null);
   const [mapError, setMapError] = useState(false);
+  const [wordCode, setWordCode] = useState(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [targetLocation, setTargetLocation] = useState(null);
   const mapRef = useRef(null);
+
+  // Check if we're in search mode
+  useEffect(() => {
+    if (route.params?.searchMode) {
+      setIsSearchMode(true);
+      setTargetLocation(route.params.targetLocation);
+      setWordCode(route.params.wordCode);
+    }
+  }, [route.params]);
 
   // Xin quyền vị trí và lấy vị trí hiện tại
   useEffect(() => {
@@ -67,24 +83,78 @@ const LocationTrackerScreen = ({ navigation }) => {
 
   // Tính khoảng cách
   useEffect(() => {
-    if (location && savedLocation) {
+    if (location && (savedLocation || targetLocation)) {
+      const target = savedLocation || targetLocation;
       const d = getDistanceFromLatLonInMeters(
         location.latitude,
         location.longitude,
-        savedLocation.latitude,
-        savedLocation.longitude
+        target.latitude,
+        target.longitude
       );
       setDistance(d);
+    } else {
+      setDistance(null);
     }
-  }, [location, savedLocation]);
+  }, [location, savedLocation, targetLocation]);
 
-  // Hàm lưu vị trí hiện tại
-  const handleSaveLocation = () => {
-    if (location) {
+  // Hàm lưu vị trí hiện tại và tạo mã
+  const handleSaveLocation = async () => {
+    if (location && location.latitude && location.longitude) {
+      const newWordCode = generateWordCode(location.latitude, location.longitude);
+      const locationData = {
+        ...location,
+        wordCode: newWordCode,
+        timestamp: Date.now(),
+      };
+      
       setSavedLocation({ ...location });
-      Alert.alert('Thành công', 'Đã lưu vị trí hiện tại!');
+      setWordCode(newWordCode);
+      
+      // Lưu vào AsyncStorage
+      try {
+        const existingData = await AsyncStorage.getItem('savedLocations');
+        const savedLocations = existingData ? JSON.parse(existingData) : [];
+        savedLocations.unshift(locationData); // Thêm vào đầu danh sách
+        await AsyncStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+      } catch (error) {
+        console.log('Error saving location:', error);
+      }
+      
+      Alert.alert(
+        'Thành công!', 
+        `Đã lưu vị trí và tạo mã:\n\n${newWordCode}\n\nBạn có thể chia sẻ mã này cho người khác.`,
+        [
+          { text: 'Chia sẻ', onPress: () => handleShareWordCode(newWordCode) },
+          { text: 'OK' }
+        ]
+      );
     } else {
       Alert.alert('Lỗi', 'Không thể lấy vị trí hiện tại');
+    }
+  };
+
+  const handleGoBack = () => {
+    if (navigation && typeof navigation.goBack === 'function') {
+      navigation.goBack();
+    } else {
+      console.error('Navigation is not available');
+    }
+  };
+
+  // Hàm chia sẻ mã 3 từ
+  const handleShareWordCode = async (code) => {
+    if (!code || typeof code !== 'string') {
+      console.error('Invalid code for sharing:', code);
+      return;
+    }
+    
+    try {
+      await Share.share({
+        message: `Tìm tôi tại vị trí này: ${code}\n\nSử dụng ứng dụng Lost & Found Buddy để tìm kiếm vị trí này.`,
+        title: 'Chia sẻ vị trí',
+      });
+    } catch (error) {
+      console.log('Error sharing:', error);
     }
   };
 
@@ -109,10 +179,11 @@ const LocationTrackerScreen = ({ navigation }) => {
 
   // Hàm tính hướng đơn giản
   const getDirectionText = () => {
-    if (!location || !savedLocation) return '';
+    if (!location || (!savedLocation && !targetLocation)) return '';
     
-    const dLat = savedLocation.latitude - location.latitude;
-    const dLon = savedLocation.longitude - location.longitude;
+    const target = savedLocation || targetLocation;
+    const dLat = target.latitude - location.latitude;
+    const dLon = target.longitude - location.longitude;
     
     if (Math.abs(dLat) > Math.abs(dLon)) {
       return dLat > 0 ? 'Bắc' : 'Nam';
@@ -128,9 +199,9 @@ const LocationTrackerScreen = ({ navigation }) => {
       <Text style={styles.fallbackText}>
         Vị trí hiện tại: {location ? `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}` : 'Đang lấy...'}
       </Text>
-      {savedLocation && (
+      {(savedLocation || targetLocation) && (
         <Text style={styles.fallbackText}>
-          Vị trí đã lưu: {savedLocation.latitude.toFixed(6)}, {savedLocation.longitude.toFixed(6)}
+          Vị trí đích: {(savedLocation || targetLocation).latitude.toFixed(6)}, {(savedLocation || targetLocation).longitude.toFixed(6)}
         </Text>
       )}
       <Button 
@@ -152,6 +223,8 @@ const LocationTrackerScreen = ({ navigation }) => {
       </SafeAreaView>
     );
   }
+
+  const currentTarget = savedLocation || targetLocation;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -177,12 +250,12 @@ const LocationTrackerScreen = ({ navigation }) => {
                 setMapError(true);
               }}
             >
-              {savedLocation && (
+              {currentTarget && (
                 <Marker
-                  coordinate={savedLocation}
-                  title="Vị trí đã lưu"
-                  description="Vị trí cuối cùng của vật/người bạn"
-                  pinColor="red"
+                  coordinate={currentTarget}
+                  title={isSearchMode ? "Vị trí cần tìm" : "Vị trí đã lưu"}
+                  description={isSearchMode ? `Mã: ${wordCode}` : `Mã: ${wordCode}`}
+                  pinColor={isSearchMode ? "green" : "red"}
                 />
               )}
             </MapView>
@@ -195,29 +268,56 @@ const LocationTrackerScreen = ({ navigation }) => {
       )}
       
       <View style={styles.infoBox}>
-        <Button 
-          title="Lưu vị trí hiện tại" 
-          onPress={handleSaveLocation}
-          disabled={!location}
-        />
-        
-        {savedLocation && (
-          <View style={styles.infoContainer}>
-            <Text style={styles.distanceText}>
-              Khoảng cách: {distance ? distance.toFixed(1) : '--'} mét
-            </Text>
-            <Text style={styles.directionText}>
-              Hướng: {getDirectionText()}
-            </Text>
+        {!isSearchMode ? (
+          <Button 
+            title="Lưu vị trí & Tạo mã" 
+            onPress={handleSaveLocation}
+            disabled={!location}
+          />
+        ) : (
+          <View style={styles.searchInfo}>
+            <Text style={styles.searchTitle}>Tìm kiếm: {wordCode}</Text>
           </View>
         )}
         
-        <Button 
-          title="Quay lại" 
-          onPress={() => navigation.goBack()}
-          style={{ marginTop: 10 }}
-        />
+        <View style={styles.buttonRow}>
+          {wordCode && !isSearchMode && (
+            <Button 
+              title="Chia sẻ mã" 
+              onPress={() => handleShareWordCode(wordCode)}
+              style={{ marginRight: 10 }}
+            />
+          )}
+                      <Button 
+              title="Quay lại" 
+              onPress={handleGoBack}
+            />
+        </View>
       </View>
+        
+        {/* Location Info Panel */}
+        {currentTarget && (
+          <View style={styles.locationInfoContainer}>
+            <LocationInfo
+              currentLocation={location}
+              targetLocation={currentTarget}
+              distance={distance}
+              wordCode={wordCode}
+              isSearchMode={isSearchMode}
+              onShare={handleShareWordCode}
+            />
+          </View>
+        )}
+        
+        {/* Compass component */}
+        {currentTarget && location && (
+          <View style={styles.compassContainer}>
+            <Compass 
+              targetLocation={currentTarget}
+              currentLocation={location}
+            />
+          </View>
+        )}
     </SafeAreaView>
   );
 };
@@ -290,6 +390,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  searchInfo: {
+    marginBottom: 10,
+  },
+  searchTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
   infoContainer: {
     marginTop: 10,
     alignItems: 'center',
@@ -302,6 +410,31 @@ const styles = StyleSheet.create({
   directionText: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 5,
+  },
+  wordCodeText: {
+    fontSize: 14,
+    color: '#3498db',
+    fontWeight: '500',
+    fontFamily: 'monospace',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 10,
+  },
+  compassContainer: {
+    position: 'absolute',
+    top: 100,
+    right: 20,
+    zIndex: 1000,
+  },
+  locationInfoContainer: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
   },
 });
 
