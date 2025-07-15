@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, View, Button, Alert, SafeAreaView, Share } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { generateWordCode } from '../utils/wordCodeGenerator';
+import { generateWordCode, parseWordCode } from '../utils/wordCodeGenerator';
 import Compass from '../components/Compass';
 import LocationInfo from '../components/LocationInfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +27,8 @@ const LocationTrackerScreen = ({ navigation, route }) => {
       setWordCode(route.params.wordCode);
     }
   }, [route.params]);
+
+
 
   // Xin quyền vị trí và lấy vị trí hiện tại
   useEffect(() => {
@@ -86,12 +88,19 @@ const LocationTrackerScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (location && (savedLocation || targetLocation)) {
       const target = savedLocation || targetLocation;
+      console.log('Calculating distance between:', {
+        current: { lat: location.latitude, lng: location.longitude },
+        target: { lat: target.latitude, lng: target.longitude }
+      });
+      
       const d = getDistanceFromLatLonInMeters(
         location.latitude,
         location.longitude,
         target.latitude,
         target.longitude
       );
+      
+      console.log('Calculated distance:', d, 'meters');
       setDistance(d);
     } else {
       setDistance(null);
@@ -159,24 +168,77 @@ const LocationTrackerScreen = ({ navigation, route }) => {
     }
   };
 
-  // Hàm tính khoảng cách giữa 2 điểm
+
+
+  // Hàm tính khoảng cách giữa 2 điểm (Haversine formula)
   function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+    // Validate inputs
+    if (typeof lat1 !== 'number' || typeof lon1 !== 'number' || 
+        typeof lat2 !== 'number' || typeof lon2 !== 'number') {
+      console.error('Invalid coordinates for distance calculation:', { lat1, lon1, lat2, lon2 });
+      return 0;
+    }
+    
+    // Check if coordinates are the same
+    if (lat1 === lat2 && lon1 === lon2) {
+      return 0;
+    }
+    
     function deg2rad(deg) {
       return deg * (Math.PI / 180);
     }
+    
     const R = 6371000; // Bán kính Trái Đất (m)
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
+    
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) *
         Math.cos(deg2rad(lat2)) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
+    
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c;
-    return d;
+    const distance = R * c;
+    
+    console.log('Distance calculation details:', {
+      lat1, lon1, lat2, lon2,
+      dLat: dLat * (180 / Math.PI), // Convert back to degrees for debugging
+      dLon: dLon * (180 / Math.PI),
+      distance
+    });
+    
+    return Math.max(0, distance); // Ensure non-negative distance
   }
+
+  // Test distance calculation on mount
+  useEffect(() => {
+    // Test case: Hanoi to Ho Chi Minh City (should be ~1700km)
+    const hanoi = { lat: 21.0285, lng: 105.8542 };
+    const hcmc = { lat: 10.8231, lng: 106.6297 };
+    const testDistance = getDistanceFromLatLonInMeters(hanoi.lat, hanoi.lng, hcmc.lat, hcmc.lng);
+    console.log('Test distance Hanoi to HCMC:', testDistance, 'meters (should be ~1700000m)');
+    
+    // Test case: Same location (should be 0)
+    const sameLocation = getDistanceFromLatLonInMeters(hanoi.lat, hanoi.lng, hanoi.lat, hanoi.lng);
+    console.log('Test distance same location:', sameLocation, 'meters (should be 0)');
+    
+    // Test word code generation and parsing
+    console.log('=== Testing Word Code System ===');
+    const testLat = 10.8760912;
+    const testLng = 106.8087224;
+    const generatedCode = generateWordCode(testLat, testLng);
+    console.log('Generated code for', testLat, testLng, ':', generatedCode);
+    
+    const parsedCoords = parseWordCode(generatedCode);
+    console.log('Parsed back to:', parsedCoords);
+    
+    if (parsedCoords) {
+      const distance = getDistanceFromLatLonInMeters(testLat, testLng, parsedCoords.latitude, parsedCoords.longitude);
+      console.log('Distance between original and parsed:', distance, 'meters');
+    }
+  }, []);
 
   // Hàm tính hướng đơn giản
   const getDirectionText = () => {
@@ -446,5 +508,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
 });
+
+
 
 export default LocationTrackerScreen; 
