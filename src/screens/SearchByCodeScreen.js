@@ -28,9 +28,9 @@ const SearchByCodeScreen = ({ navigation }) => {
     if (!isValidWordCode(trimmedCode)) {
       Alert.alert(
         'Mã không hợp lệ', 
-        'Mã 3 từ phải có định dạng: từ1.từ2.từ3\n\nVí dụ: meo.xanh.ban',
+        'Mã 3 từ phải có định dạng chính xác: từ1.từ2.từ3\n\nVí dụ: mèo đen.nhà cao.xe nhanh\n\nLưu ý: Phải nhập chính xác từ ghép, không tự động format',
         [
-          { text: 'Xem ví dụ', onPress: () => handleCopyExample('meo.xanh.ban') },
+          { text: 'Xem ví dụ', onPress: () => handleCopyExample('mèo đen.nhà cao.xe nhanh') },
           { text: 'OK' }
         ]
       );
@@ -100,20 +100,12 @@ const SearchByCodeScreen = ({ navigation }) => {
   const formatWordCode = (text) => {
     if (!text || typeof text !== 'string') return '';
     
-    // Cho phép dấu chấm, chữ cái, dấu gạch ngang và khoảng trắng
-    const cleanedText = text.toLowerCase()
-      .replace(/[^a-z\-\.\s]/g, '') // Chỉ giữ lại chữ cái, dấu gạch ngang, dấu chấm và khoảng trắng
-      .replace(/\s+/g, '.') // Thay khoảng trắng bằng dấu chấm
-      .replace(/\.+/g, '.') // Thay nhiều dấu chấm liên tiếp bằng một dấu chấm
-      .replace(/^\.+|\.+$/g, ''); // Xóa dấu chấm ở đầu và cuối
+    // Chỉ cho phép chữ cái tiếng Việt có dấu, dấu chấm và khoảng trắng
+    // Không thay thế gì cả, chỉ lọc ký tự không hợp lệ
+    const cleanedText = text
+      .replace(/[^a-zA-ZàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ\.\s]/g, '');
     
-    // Tách thành các từ và giới hạn 3 từ
-    const words = cleanedText.split('.');
-    
-    if (words.length <= 3) {
-      return words.join('.');
-    }
-    return words.slice(0, 3).join('.');
+    return cleanedText;
   };
 
   return (
@@ -137,10 +129,10 @@ const SearchByCodeScreen = ({ navigation }) => {
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>Nhập mã 3 từ</Text>
             <Text style={styles.infoDescription}>
-              Nhập mã 3 từ tiếng Việt để tìm vị trí và được hướng dẫn đi bộ
+              Nhập chính xác mã 3 từ tiếng Việt có dấu để tìm vị trí
             </Text>
             <Text style={styles.infoTip}>
-              💡 Bạn có thể paste mã từ clipboard hoặc nhấn vào ví dụ để copy
+              💡 Phải nhập chính xác định dạng từ ghép, ví dụ: mèo đen.nhà cao.xe nhanh
             </Text>
           </View>
 
@@ -154,11 +146,11 @@ const SearchByCodeScreen = ({ navigation }) => {
                 ]}
                 value={wordCode}
                 onChangeText={(text) => setWordCode(formatWordCode(text))}
-                placeholder="ví dụ: meo.xanh.ban"
+                placeholder="Nhập chính xác: mèo đen.nhà cao.xe nhanh"
                 placeholderTextColor="#bdc3c7"
                 autoCapitalize="none"
                 autoCorrect={false}
-                maxLength={30}
+                maxLength={50}
                 selectTextOnFocus={true}
                 contextMenuHidden={false}
                 keyboardType="default"
@@ -185,25 +177,26 @@ const SearchByCodeScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.exampleSection}>
-            <Text style={styles.exampleTitle}>Ví dụ mã 3 từ (nhấn để copy):</Text>
+            <Text style={styles.exampleTitle}>Ví dụ mã 3 từ (nhấn để copy chính xác):</Text>
+            <Text style={styles.exampleSubtitle}>Phải nhập đúng định dạng từ ghép:</Text>
             <View style={styles.examples}>
               <TouchableOpacity 
                 style={styles.example} 
-                onPress={() => handleCopyExample('meo.xanh.ban')}
+                onPress={() => handleCopyExample('mèo đen.nhà cao.xe nhanh')}
               >
-                <Text style={styles.exampleText}>meo.xanh.ban</Text>
+                <Text style={styles.exampleText}>mèo đen.nhà cao.xe nhanh</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.example} 
-                onPress={() => handleCopyExample('cho.do.nha')}
+                onPress={() => handleCopyExample('chó đỏ.cây xanh.hoa vàng')}
               >
-                <Text style={styles.exampleText}>cho.do.nha</Text>
+                <Text style={styles.exampleText}>chó đỏ.cây xanh.hoa vàng</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.example} 
-                onPress={() => handleCopyExample('ga.vang.cay')}
+                onPress={() => handleCopyExample('gà vàng.sông lớn.núi cao')}
               >
-                <Text style={styles.exampleText}>ga.vang.cay</Text>
+                <Text style={styles.exampleText}>gà vàng.sông lớn.núi cao</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -367,6 +360,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#2c3e50',
     marginBottom: 12,
+  },
+  exampleSubtitle: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 8,
   },
   examples: {
     gap: 8,
