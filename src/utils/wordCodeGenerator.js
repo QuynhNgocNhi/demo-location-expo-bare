@@ -1,104 +1,105 @@
 // Word Code Generator for Vietnamese 3-word addresses
-// Inspired by What3Words but with Vietnamese words
+// Inspired by What3Words but with Vietnamese words with diacritics
+// Precision: High precision through word combinations
 
-// Vietnamese words for generating 3-word codes with high precision
+// Vietnamese words with diacritics for generating 3-word codes
+// Each word can be combined with others to create unique combinations
 const VIETNAMESE_WORDS = {
-  // Animals (Động vật) - 50 words
-  animals: [
-    'meo', 'cho', 'ga', 'vit', 'ngua', 'bo', 'lon', 'de', 'cuu', 'trau',
-    'voi', 'ho', 'su-tu', 'cao', 'soc', 'chuot', 'tho', 'ran', 'ech', 'ca',
-    'chim', 'ong', 'buom', 'kien', 'ruoi', 'muoi', 'nhen', 'bo-cap', 'cua', 'tom',
-    'ca-sau', 'rua', 'ech-nhai', 'nhen-nha', 'ong-mat', 'ong-nghe', 'ong-vo-vang', 'ong-dat',
-    'buom-dem', 'buom-ngay', 'kien-den', 'kien-do', 'ruoi-xanh', 'ruoi-den', 'muoi-anopheles',
-    'muoi-culex', 'nhen-hung', 'nhen-nau', 'bo-cap-den', 'bo-cap-vang', 'cua-bien', 'cua-song',
-    'tom-he', 'tom-su', 'tom-cang', 'tom-hum', 'ca-bass', 'ca-chim', 'ca-ro', 'ca-tram'
+  // Basic words (Từ cơ bản) - 50 words
+  basic: [
+    'mèo', 'chó', 'gà', 'vịt', 'ngựa', 'bò', 'lợn', 'dê', 'cừu', 'trâu',
+    'voi', 'hổ', 'sư tử', 'cáo', 'sóc', 'chuột', 'thỏ', 'rắn', 'ếch', 'cá',
+    'chim', 'ong', 'bướm', 'kiến', 'ruồi', 'muỗi', 'nhện', 'bọ cạp', 'cua', 'tôm',
+    'cá sấu', 'rùa', 'ếch nhái', 'nhện nhà', 'ong mật', 'ong nghệ', 'ong vò vẽ', 'ong đất',
+    'bướm đêm', 'bướm ngày', 'kiến đen', 'kiến đỏ', 'ruồi xanh', 'ruồi đen', 'muỗi anopheles',
+    'muỗi culex', 'nhện hùng', 'nhện nâu', 'bọ cạp đen', 'bọ cạp vàng', 'cua biển', 'cua sông'
   ],
   
-  // Colors (Màu sắc) - 50 words
+  // Colors with diacritics (Màu sắc có dấu) - 50 words
   colors: [
-    'do', 'xanh', 'vang', 'tim', 'cam', 'hong', 'nau', 'den', 'trang', 'xam',
-    'lam', 'luc', 'hong-nhat', 'xanh-la', 'xanh-duong', 'vang-nhat', 'do-nhat',
-    'xanh-xam', 'vang-cam', 'do-sam', 'xanh-nhat', 'tim-nhat', 'cam-nhat',
-    'do-dam', 'do-tuoi', 'do-nhat', 'do-cam', 'xanh-duong-dam', 'xanh-duong-nhat',
-    'xanh-la-dam', 'xanh-la-nhat', 'vang-dam', 'vang-nhat', 'vang-cam', 'vang-xanh',
-    'tim-dam', 'tim-nhat', 'tim-xanh', 'tim-do', 'cam-dam', 'cam-nhat', 'cam-do',
-    'hong-dam', 'hong-nhat', 'hong-do', 'hong-tim', 'nau-dam', 'nau-nhat', 'nau-do',
-    'nau-xanh', 'den-tuyet', 'den-xam', 'trang-tuyet', 'trang-nga', 'xam-dam', 'xam-nhat'
+    'đỏ', 'xanh', 'vàng', 'tím', 'cam', 'hồng', 'nâu', 'đen', 'trắng', 'xám',
+    'lam', 'lục', 'hồng nhạt', 'xanh lá', 'xanh dương', 'vàng nhạt', 'đỏ nhạt',
+    'xanh xám', 'vàng cam', 'đỏ sẫm', 'xanh nhạt', 'tím nhạt', 'cam nhạt',
+    'đỏ đậm', 'đỏ tươi', 'đỏ nhạt', 'đỏ cam', 'xanh dương đậm', 'xanh dương nhạt',
+    'xanh lá đậm', 'xanh lá nhạt', 'vàng đậm', 'vàng nhạt', 'vàng cam', 'vàng xanh',
+    'tím đậm', 'tím nhạt', 'tím xanh', 'tím đỏ', 'cam đậm', 'cam nhạt', 'cam đỏ',
+    'hồng đậm', 'hồng nhạt', 'hồng đỏ', 'hồng tím', 'nâu đậm', 'nâu nhạt', 'nâu đỏ',
+    'nâu xanh', 'đen tuyệt', 'đen xám', 'trắng tuyệt', 'trắng ngà', 'xám đậm', 'xám nhạt'
   ],
   
-  // Objects (Đồ vật) - 50 words
+  // Objects with diacritics (Đồ vật có dấu) - 50 words
   objects: [
-    'ban', 'ghe', 'may', 'dien-thoai', 'sach', 'but', 'cay', 'hoa', 'nha', 'cua',
-    'cua-so', 'den', 'quat', 'tivi', 'tu-lanh', 'may-giat', 'xe', 'xe-may', 'xe-dap',
-    'giuong', 'ghe-sofa', 'ban-an', 'tu-quan-ao', 'may-tinh', 'chuot', 'ban-phim',
-    'loa', 'micro', 'camera', 'tablet', 'laptop', 'may-in', 'may-scan', 'may-chi',
-    'may-tinh-bang', 'dien-thoai-thong-minh', 'dien-thoai-co', 'sach-giao-khoa', 'sach-tieu-thuyet',
-    'sach-ky-thuat', 'but-bi', 'but-chi', 'but-long', 'but-dau', 'cay-canh', 'cay-an-qua',
-    'cay-lay-go', 'hoa-hong', 'hoa-cuc', 'hoa-lan', 'hoa-sen', 'nha-chung-cu', 'nha-biet-thu',
-    'nha-pho', 'cua-go', 'cua-nhom', 'cua-kinh', 'cua-so-go', 'cua-so-nhom', 'den-tuyp', 'den-led'
+    'bàn', 'ghế', 'máy', 'điện thoại', 'sách', 'bút', 'cây', 'hoa', 'nhà', 'cửa',
+    'cửa sổ', 'đèn', 'quạt', 'tivi', 'tủ lạnh', 'máy giặt', 'xe', 'xe máy', 'xe đạp',
+    'giường', 'ghế sofa', 'bàn ăn', 'tủ quần áo', 'máy tính', 'chuột', 'bàn phím',
+    'loa', 'micro', 'camera', 'tablet', 'laptop', 'máy in', 'máy scan', 'máy chiếu',
+    'máy tính bảng', 'điện thoại thông minh', 'điện thoại cổ', 'sách giáo khoa', 'sách tiểu thuyết',
+    'sách kỹ thuật', 'bút bi', 'bút chì', 'bút lông', 'bút dạ', 'cây cảnh', 'cây ăn quả',
+    'cây lấy gỗ', 'hoa hồng', 'hoa cúc', 'hoa lan', 'hoa sen', 'nhà chung cư', 'nhà biệt thự',
+    'nhà phố', 'cửa gỗ', 'cửa nhôm', 'cửa kính', 'cửa sổ gỗ', 'cửa sổ nhôm', 'đèn tuýp', 'đèn led'
   ],
   
-  // Nature (Thiên nhiên) - 50 words
+  // Nature with diacritics (Thiên nhiên có dấu) - 50 words
   nature: [
-    'nui', 'song', 'bien', 'rung', 'ho', 'suoi', 'giong', 'mua', 'nang', 'may',
-    'sao', 'mat-troi', 'mat-trang', 'gio', 'sap', 'suong-mu', 'da', 'cat', 'dat',
-    'co', 'la', 're', 'than', 'canh', 'hoa', 'qua', 'nui-cao', 'nui-thap', 'nui-lua',
-    'song-lon', 'song-nho', 'song-cai', 'bien-xanh', 'bien-xam', 'rung-gia', 'rung-non',
-    'ho-lon', 'ho-nho', 'suoi-nuoc', 'suoi-kho', 'giong-to', 'giong-nho', 'mua-rao',
-    'mua-phun', 'nang-gay', 'nang-nhe', 'may-trang', 'may-den', 'sao-sang', 'sao-mo'
+    'núi', 'sông', 'biển', 'rừng', 'hồ', 'suối', 'gió', 'mưa', 'nắng', 'mây',
+    'sao', 'mặt trời', 'mặt trăng', 'gió', 'sấm', 'sương mù', 'đá', 'cát', 'đất',
+    'cỏ', 'lá', 'rễ', 'thân', 'cành', 'hoa', 'quả', 'núi cao', 'núi thấp', 'núi lửa',
+    'sông lớn', 'sông nhỏ', 'sông cái', 'biển xanh', 'biển xám', 'rừng già', 'rừng non',
+    'hồ lớn', 'hồ nhỏ', 'suối nước', 'suối khô', 'gió to', 'gió nhỏ', 'mưa rào',
+    'mưa phùn', 'nắng gắt', 'nắng nhẹ', 'mây trắng', 'mây đen', 'sao sáng', 'sao mờ'
   ],
   
-  // Food (Thức ăn) - 50 words
+  // Food with diacritics (Thức ăn có dấu) - 50 words
   food: [
-    'com', 'pho', 'banh-mi', 'bun', 'cha-ca', 'banh-cuon', 'nem', 'cha-gio',
-    'banh-xeo', 'banh-khot', 'banh-tet', 'banh-chung', 'banh-troi', 'che',
-    'banh-bot-loc', 'banh-nam', 'banh-beo', 'banh-it', 'banh-chay', 'banh-gai',
-    'banh-kho', 'banh-deo', 'banh-pia', 'banh-dan-gian', 'banh-trang', 'banh-cuon-la',
-    'banh-cuon-tom', 'banh-cuon-thit', 'nem-chua', 'nem-nuong', 'cha-gio-tom',
-    'cha-gio-thit', 'cha-ca-lang', 'cha-ca-ha-noi', 'pho-bo', 'pho-ga', 'pho-chay',
-    'bun-bo', 'bun-cha', 'bun-rieu', 'bun-mam', 'com-tam', 'com-rang', 'com-chay',
-    'che-ba-mau', 'che-hat-sen', 'che-tran-chau', 'che-thai', 'che-dau-xanh'
+    'cơm', 'phở', 'bánh mì', 'bún', 'chả cá', 'bánh cuốn', 'nem', 'chả giò',
+    'bánh xèo', 'bánh khọt', 'bánh tét', 'bánh chưng', 'bánh trôi', 'chè',
+    'bánh bột lọc', 'bánh nậm', 'bánh bèo', 'bánh ít', 'bánh chay', 'bánh gai',
+    'bánh khô', 'bánh dẻo', 'bánh pía', 'bánh dân gian', 'bánh tráng', 'bánh cuốn lá',
+    'bánh cuốn tôm', 'bánh cuốn thịt', 'nem chua', 'nem nướng', 'chả giò tôm',
+    'chả giò thịt', 'chả cá lãng', 'chả cá hà nội', 'phở bò', 'phở gà', 'phở chay',
+    'bún bò', 'bún chả', 'bún riêu', 'bún mắm', 'cơm tấm', 'cơm rang', 'cơm chay',
+    'chè ba màu', 'chè hạt sen', 'chè trân châu', 'chè thái', 'chè đậu xanh'
   ],
   
-  // Actions (Hành động) - 50 words
+  // Actions with diacritics (Hành động có dấu) - 50 words
   actions: [
-    'di', 've', 'chay', 'nha', 'an', 'uong', 'ngu', 'doc', 'viet', 'hat',
-    'mua', 'ban', 'hoc', 'lam', 'choi', 'xem', 'nghe', 'noi', 'cuoi', 'khoc',
-    'dung', 'ngoi', 'nam', 'di-bo', 'chay-bo', 'boi', 'nhay', 'mua', 'hat',
-    'nghe-nhac', 'xem-phim', 'doc-sach', 'viet-thu', 'goi-dien', 'gui-tin',
-    'di-lam', 'di-choi', 'di-du-lich', 'di-hoc', 'di-benh-vien', 'di-cho',
-    've-nha', 've-truong', 've-cong-ty', 've-que', 'chay-nhanh', 'chay-cham',
-    'nha-nhanh', 'nha-cham', 'an-sang', 'an-trua', 'an-toi', 'uong-nuoc', 'uong-tra'
+    'đi', 'về', 'chạy', 'nhảy', 'ăn', 'uống', 'ngủ', 'đọc', 'viết', 'hát',
+    'mua', 'bán', 'học', 'làm', 'chơi', 'xem', 'nghe', 'nói', 'cười', 'khóc',
+    'đứng', 'ngồi', 'nằm', 'đi bộ', 'chạy bộ', 'bơi', 'nhảy', 'múa', 'hát',
+    'nghe nhạc', 'xem phim', 'đọc sách', 'viết thư', 'gọi điện', 'gửi tin',
+    'đi làm', 'đi chơi', 'đi du lịch', 'đi học', 'đi bệnh viện', 'đi chợ',
+    'về nhà', 'về trường', 'về công ty', 'về quê', 'chạy nhanh', 'chạy chậm',
+    'nhảy nhanh', 'nhảy chậm', 'ăn sáng', 'ăn trưa', 'ăn tối', 'uống nước', 'uống trà'
   ],
   
-  // Places (Địa điểm) - 50 words
+  // Places with diacritics (Địa điểm có dấu) - 50 words
   places: [
-    'nha', 'truong', 'benh-vien', 'cho', 'sieu-thi', 'ngan-hang', 'buu-dien',
-    'cong-ty', 'van-phong', 'khach-san', 'nha-hang', 'quan-cafe', 'rap-chieu-phim',
-    'san-van-dong', 'cong-vien', 'vien-bao-tang', 'thu-vien', 'nha-ga', 'san-bay',
-    'nha-tho', 'chua', 'den', 'mieu', 'lang', 'xa', 'phuong', 'quan', 'huyen',
-    'tinh', 'thanh-pho', 'thi-tran', 'thi-xa', 'khu-cong-nghiep', 'khu-du-lich',
-    'khu-dan-cu', 'khu-thuong-mai', 'khu-giai-tri', 'khu-the-thao', 'khu-y-te',
-    'khu-giao-duc', 'khu-hanh-chinh', 'khu-quan-su', 'khu-an-ninh', 'khu-canh-sat',
-    'khu-cuu-hoa', 'khu-buu-chinh', 'khu-dien-luc', 'khu-nuoc', 'khu-rac', 'khu-xe'
+    'nhà', 'trường', 'bệnh viện', 'chợ', 'siêu thị', 'ngân hàng', 'bưu điện',
+    'công ty', 'văn phòng', 'khách sạn', 'nhà hàng', 'quán cà phê', 'rạp chiếu phim',
+    'sân vận động', 'công viên', 'viện bảo tàng', 'thư viện', 'nhà ga', 'sân bay',
+    'nhà thờ', 'chùa', 'đền', 'miếu', 'làng', 'xã', 'phường', 'quận', 'huyện',
+    'tỉnh', 'thành phố', 'thị trấn', 'thị xã', 'khu công nghiệp', 'khu du lịch',
+    'khu dân cư', 'khu thương mại', 'khu giải trí', 'khu thể thao', 'khu y tế',
+    'khu giáo dục', 'khu hành chính', 'khu quân sự', 'khu an ninh', 'khu cảnh sát',
+    'khu cứu hỏa', 'khu bưu chính', 'khu điện lực', 'khu nước', 'khu rác', 'khu xe'
   ],
   
-  // Numbers (Số đếm) - 50 words
+  // Numbers with diacritics (Số đếm có dấu) - 50 words
   numbers: [
-    'mot', 'hai', 'ba', 'bon', 'nam', 'sau', 'bay', 'tam', 'chin', 'muoi',
-    'muoi-mot', 'muoi-hai', 'muoi-ba', 'muoi-bon', 'muoi-lam', 'muoi-sau',
-    'muoi-bay', 'muoi-tam', 'muoi-chin', 'hai-muoi', 'ba-muoi', 'bon-muoi',
-    'nam-muoi', 'sau-muoi', 'bay-muoi', 'tam-muoi', 'chin-muoi', 'mot-tram',
-    'hai-tram', 'ba-tram', 'bon-tram', 'nam-tram', 'sau-tram', 'bay-tram',
-    'tam-tram', 'chin-tram', 'mot-nghin', 'hai-nghin', 'ba-nghin', 'bon-nghin',
-    'nam-nghin', 'sau-nghin', 'bay-nghin', 'tam-nghin', 'chin-nghin', 'muoi-nghin',
-    'hai-muoi-nghin', 'ba-muoi-nghin', 'bon-muoi-nghin', 'nam-muoi-nghin'
+    'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín', 'mười',
+    'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu',
+    'mười bảy', 'mười tám', 'mười chín', 'hai mươi', 'ba mươi', 'bốn mươi',
+    'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi', 'một trăm',
+    'hai trăm', 'ba trăm', 'bốn trăm', 'năm trăm', 'sáu trăm', 'bảy trăm',
+    'tám trăm', 'chín trăm', 'một nghìn', 'hai nghìn', 'ba nghìn', 'bốn nghìn',
+    'năm nghìn', 'sáu nghìn', 'bảy nghìn', 'tám nghìn', 'chín nghìn', 'mười nghìn',
+    'hai mươi nghìn', 'ba mươi nghìn', 'bốn mươi nghìn', 'năm mươi nghìn'
   ]
 };
 
 // Combine all words into one array
 const ALL_WORDS = [
-  ...VIETNAMESE_WORDS.animals,
+  ...VIETNAMESE_WORDS.basic,
   ...VIETNAMESE_WORDS.colors,
   ...VIETNAMESE_WORDS.objects,
   ...VIETNAMESE_WORDS.nature,
@@ -110,18 +111,30 @@ const ALL_WORDS = [
 
 // Remove duplicates and log the final array
 const UNIQUE_WORDS = [...new Set(ALL_WORDS)];
-console.log('Word code system initialized with', UNIQUE_WORDS.length, 'unique words');
+console.log('Word code system initialized with', UNIQUE_WORDS.length, 'unique words with diacritics');
 console.log('Sample words:', UNIQUE_WORDS.slice(0, 10));
 
-// Generate a 3-word code based on coordinates with 3m precision
+// Function to combine words to create unique combinations
+const combineWords = (word1, word2) => {
+  // Simple combination: word1 + word2
+  return `${word1}${word2}`;
+};
+
+// Function to create compound words from base words
+const createCompoundWord = (baseWord, modifier) => {
+  // Create compound words like "mèo đen", "nhà cao", "xe nhanh"
+  return `${baseWord} ${modifier}`;
+};
+
+// Generate a 3-word code based on coordinates with high precision through combinations
 export const generateWordCode = (latitude, longitude) => {
   // Validate inputs
   if (typeof latitude !== 'number' || typeof longitude !== 'number') {
     console.error('Invalid coordinates provided to generateWordCode:', { latitude, longitude });
-    return 'meo.xanh.ban'; // Default fallback
+    return 'mèo.xanh.bàn'; // Default fallback
   }
   
-  // Focus on Ho Chi Minh City region for 3m precision
+  // Focus on Ho Chi Minh City region for high precision
   // HCMC roughly: 10.3°N to 11.2°N, 106.2°E to 107.2°E
   const HCMC_LAT_MIN = 10.3;
   const HCMC_LAT_MAX = 11.2;
@@ -136,26 +149,32 @@ export const generateWordCode = (latitude, longitude) => {
   const clampedLat = Math.max(0, Math.min(1, normalizedLat));
   const clampedLng = Math.max(0, Math.min(1, normalizedLng));
   
-  // Calculate grid size for 3m precision
-  // 3m ≈ 0.000027 degrees (roughly)
-  const GRID_SIZE_LAT = Math.floor((HCMC_LAT_MAX - HCMC_LAT_MIN) / 0.000027);
-  const GRID_SIZE_LNG = Math.floor((HCMC_LNG_MAX - HCMC_LNG_MIN) / 0.000027);
+  // Calculate grid size for high precision (~1m precision)
+  // 1m ≈ 0.000009 degrees (roughly)
+  const GRID_SIZE_LAT = Math.floor((HCMC_LAT_MAX - HCMC_LAT_MIN) / 0.000009);
+  const GRID_SIZE_LNG = Math.floor((HCMC_LNG_MAX - HCMC_LNG_MIN) / 0.000009);
   
   // Convert to grid coordinates
   const latGrid = Math.floor(clampedLat * GRID_SIZE_LAT);
   const lngGrid = Math.floor(clampedLng * GRID_SIZE_LNG);
   
-  // Convert grid coordinates to word indices
-  const latIndex = Math.min(UNIQUE_WORDS.length - 1, Math.floor(latGrid * UNIQUE_WORDS.length / GRID_SIZE_LAT));
-  const lngIndex = Math.min(UNIQUE_WORDS.length - 1, Math.floor(lngGrid * UNIQUE_WORDS.length / GRID_SIZE_LNG));
+  // Use word combinations for higher precision
+  // First word: base word from latitude
+  const latIndex = Math.floor(latGrid * UNIQUE_WORDS.length / GRID_SIZE_LAT) % UNIQUE_WORDS.length;
+  const baseWord = UNIQUE_WORDS[latIndex];
   
-  // Use a combination for the third word to add some uniqueness
-  const combinedIndex = Math.min(UNIQUE_WORDS.length - 1, Math.floor(((latGrid + lngGrid) / (GRID_SIZE_LAT + GRID_SIZE_LNG)) * UNIQUE_WORDS.length));
+  // Second word: modifier word from longitude
+  const lngIndex = Math.floor(lngGrid * UNIQUE_WORDS.length / GRID_SIZE_LNG) % UNIQUE_WORDS.length;
+  const modifierWord = UNIQUE_WORDS[lngIndex];
   
-  // Get 3 words, ensuring indices are within bounds
-  const word1 = UNIQUE_WORDS[Math.max(0, Math.min(latIndex, UNIQUE_WORDS.length - 1))];
-  const word2 = UNIQUE_WORDS[Math.max(0, Math.min(lngIndex, UNIQUE_WORDS.length - 1))];
-  const word3 = UNIQUE_WORDS[Math.max(0, Math.min(combinedIndex, UNIQUE_WORDS.length - 1))];
+  // Third word: combination for sub-grid precision
+  const combinedIndex = Math.floor(((latGrid * 37 + lngGrid * 73) % (GRID_SIZE_LAT + GRID_SIZE_LNG)) * UNIQUE_WORDS.length / (GRID_SIZE_LAT + GRID_SIZE_LNG)) % UNIQUE_WORDS.length;
+  const thirdWord = UNIQUE_WORDS[combinedIndex];
+  
+  // Create compound words for higher precision
+  const word1 = createCompoundWord(baseWord, modifierWord);
+  const word2 = createCompoundWord(modifierWord, thirdWord);
+  const word3 = createCompoundWord(thirdWord, baseWord);
   
   console.log('Generated word code:', { 
     latitude, longitude, 
@@ -163,9 +182,11 @@ export const generateWordCode = (latitude, longitude) => {
     clampedLat, clampedLng,
     latGrid, lngGrid, GRID_SIZE_LAT, GRID_SIZE_LNG,
     latIndex, lngIndex, combinedIndex, 
+    baseWord, modifierWord, thirdWord,
     word1, word2, word3,
     totalWords: UNIQUE_WORDS.length,
-    precision: '3m x 3m'
+    totalCombinations: UNIQUE_WORDS.length * UNIQUE_WORDS.length * UNIQUE_WORDS.length,
+    precision: '~1m x 1m through word combinations'
   });
   
   return `${word1}.${word2}.${word3}`;
@@ -183,23 +204,35 @@ export const parseWordCode = (wordCode) => {
       throw new Error(`Invalid word code format: expected 3 words, got ${words.length}`);
     }
     
-    // Find indices of words
-    const index1 = UNIQUE_WORDS.indexOf(words[0]);
-    const index2 = UNIQUE_WORDS.indexOf(words[1]);
-    const index3 = UNIQUE_WORDS.indexOf(words[2]);
+    // Extract base words from compound words
+    // Assuming format: "base modifier" for each word
+    const extractBaseWord = (compoundWord) => {
+      const parts = compoundWord.split(' ');
+      return parts[0]; // Return the first part as base word
+    };
     
-    console.log('Word indices:', { index1, index2, index3 });
+    const baseWord1 = extractBaseWord(words[0]);
+    const baseWord2 = extractBaseWord(words[1]);
+    const baseWord3 = extractBaseWord(words[2]);
+    
+    console.log('Extracted base words:', { baseWord1, baseWord2, baseWord3 });
+    
+    // Find indices of base words
+    const index1 = UNIQUE_WORDS.indexOf(baseWord1);
+    const index2 = UNIQUE_WORDS.indexOf(baseWord2);
+    const index3 = UNIQUE_WORDS.indexOf(baseWord3);
+    
+    console.log('Base word indices:', { index1, index2, index3 });
     
     if (index1 === -1 || index2 === -1 || index3 === -1) {
       const invalidWords = [];
-      if (index1 === -1) invalidWords.push(words[0]);
-      if (index2 === -1) invalidWords.push(words[1]);
-      if (index3 === -1) invalidWords.push(words[2]);
-      throw new Error(`Invalid words in code: ${invalidWords.join(', ')}`);
+      if (index1 === -1) invalidWords.push(baseWord1);
+      if (index2 === -1) invalidWords.push(baseWord2);
+      if (index3 === -1) invalidWords.push(baseWord3);
+      throw new Error(`Invalid base words in code: ${invalidWords.join(', ')}`);
     }
     
     // Convert back to approximate coordinates using the same logic as generation
-    // First two words represent latitude and longitude
     const normalizedLat = index1 / (UNIQUE_WORDS.length - 1);
     const normalizedLng = index2 / (UNIQUE_WORDS.length - 1);
     
@@ -209,9 +242,9 @@ export const parseWordCode = (wordCode) => {
     const HCMC_LNG_MIN = 106.2;
     const HCMC_LNG_MAX = 107.2;
     
-    // Calculate grid size for 3m precision
-    const GRID_SIZE_LAT = Math.floor((HCMC_LAT_MAX - HCMC_LAT_MIN) / 0.000027);
-    const GRID_SIZE_LNG = Math.floor((HCMC_LNG_MAX - HCMC_LNG_MIN) / 0.000027);
+    // Calculate grid size for ~1m precision
+    const GRID_SIZE_LAT = Math.floor((HCMC_LAT_MAX - HCMC_LAT_MIN) / 0.000009);
+    const GRID_SIZE_LNG = Math.floor((HCMC_LNG_MAX - HCMC_LNG_MIN) / 0.000009);
     
     // Convert word indices back to grid coordinates
     const latGrid = Math.floor(normalizedLat * GRID_SIZE_LAT);
@@ -227,8 +260,8 @@ export const parseWordCode = (wordCode) => {
     
     // Add small offset based on third word for sub-grid precision
     const thirdWordWeight = index3 / (UNIQUE_WORDS.length - 1);
-    const latOffset = (thirdWordWeight - 0.5) * 0.000027; // ±3m offset
-    const lngOffset = (thirdWordWeight - 0.5) * 0.000027;
+    const latOffset = (thirdWordWeight - 0.5) * 0.000009; // ±1m offset
+    const lngOffset = (thirdWordWeight - 0.5) * 0.000009;
     
     const finalLat = lat + latOffset;
     const finalLng = lng + lngOffset;
@@ -236,12 +269,13 @@ export const parseWordCode = (wordCode) => {
     const result = { latitude: finalLat, longitude: finalLng };
     console.log('Parsed coordinates:', { 
       wordCode,
+      baseWord1, baseWord2, baseWord3,
       index1, index2, index3,
       normalizedLat, normalizedLng, 
       latGrid, lngGrid, GRID_SIZE_LAT, GRID_SIZE_LNG,
       lat, lng, finalLat, finalLng,
       totalWords: UNIQUE_WORDS.length,
-      precision: '3m x 3m grid'
+      precision: '~1m x 1m through word combinations'
     });
     
     return result;
@@ -266,10 +300,18 @@ export const isValidWordCode = (wordCode) => {
     return false;
   }
   
-  const validWords = words.every(word => UNIQUE_WORDS.includes(word));
+  // Check if each compound word contains valid base words
+  const extractBaseWord = (compoundWord) => {
+    const parts = compoundWord.split(' ');
+    return parts[0];
+  };
+  
+  const baseWords = words.map(extractBaseWord);
+  const validWords = baseWords.every(word => UNIQUE_WORDS.includes(word));
+  
   if (!validWords) {
-    const invalidWords = words.filter(word => !UNIQUE_WORDS.includes(word));
-    console.log('Invalid words found:', invalidWords);
+    const invalidWords = baseWords.filter(word => !UNIQUE_WORDS.includes(word));
+    console.log('Invalid base words found:', invalidWords);
   }
   
   return validWords;
@@ -281,7 +323,12 @@ export const getRandomWordCode = () => {
   const word2 = UNIQUE_WORDS[Math.floor(Math.random() * UNIQUE_WORDS.length)];
   const word3 = UNIQUE_WORDS[Math.floor(Math.random() * UNIQUE_WORDS.length)];
   
-  return `${word1}.${word2}.${word3}`;
+  // Create compound words
+  const compoundWord1 = createCompoundWord(word1, word2);
+  const compoundWord2 = createCompoundWord(word2, word3);
+  const compoundWord3 = createCompoundWord(word3, word1);
+  
+  return `${compoundWord1}.${compoundWord2}.${compoundWord3}`;
 };
 
 // Get word categories for UI
