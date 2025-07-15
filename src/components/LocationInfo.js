@@ -7,7 +7,8 @@ const LocationInfo = ({
   distance, 
   wordCode, 
   isSearchMode,
-  onShare 
+  onShare,
+  onClose 
 }) => {
   const formatCoordinate = (coord) => {
     if (!coord || typeof coord.latitude !== 'number' || typeof coord.longitude !== 'number') return '--';
@@ -15,6 +16,7 @@ const LocationInfo = ({
   };
 
   const formatDistance = (dist) => {
+    console.log('Formatting distance:', dist, typeof dist);
     if (!dist || typeof dist !== 'number') return '--';
     if (dist < 1000) {
       return `${dist.toFixed(1)} mét`;
@@ -37,6 +39,15 @@ const LocationInfo = ({
         <Text style={styles.title}>
           {isSearchMode ? 'Thông tin tìm kiếm' : 'Thông tin vị trí'}
         </Text>
+        {onClose && (
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -90,18 +101,7 @@ const LocationInfo = ({
         </View>
       )}
 
-      <View style={styles.tipsSection}>
-        <Text style={styles.tipsTitle}>💡 Mẹo sử dụng:</Text>
-        <Text style={styles.tipText}>
-          • Di chuyển theo hướng mũi tên đỏ trên la bàn
-        </Text>
-        <Text style={styles.tipText}>
-          • Khi khoảng cách dưới 10m, bạn đã đến gần vị trí
-        </Text>
-        <Text style={styles.tipText}>
-          • Chia sẻ mã 3 từ cho người khác để họ tìm bạn
-        </Text>
-      </View>
+     
     </View>
   );
 };
@@ -123,11 +123,15 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2c3e50',
+    flex: 1,
     textAlign: 'center',
   },
   section: {
@@ -207,6 +211,27 @@ const styles = StyleSheet.create({
     color: '#7f8c8d',
     marginBottom: 4,
     lineHeight: 16,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#e74c3c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

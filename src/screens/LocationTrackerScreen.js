@@ -16,6 +16,7 @@ const LocationTrackerScreen = ({ navigation, route }) => {
   const [wordCode, setWordCode] = useState(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [targetLocation, setTargetLocation] = useState(null);
+  const [showLocationInfo, setShowLocationInfo] = useState(true);
   const mapRef = useRef(null);
 
   // Check if we're in search mode
@@ -79,7 +80,7 @@ const LocationTrackerScreen = ({ navigation, route }) => {
         locationSubscription.remove();
       }
     };
-  }, [location]);
+  }, []); // Remove location from dependency array to prevent infinite loop
 
   // Tính khoảng cách
   useEffect(() => {
@@ -150,7 +151,7 @@ const LocationTrackerScreen = ({ navigation, route }) => {
     
     try {
       await Share.share({
-        message: `Tìm tôi tại vị trí này: ${code}\n\nSử dụng ứng dụng Lost & Found Buddy để tìm kiếm vị trí này.`,
+        message:code,
         title: 'Chia sẻ vị trí',
       });
     } catch (error) {
@@ -288,15 +289,22 @@ const LocationTrackerScreen = ({ navigation, route }) => {
               style={{ marginRight: 10 }}
             />
           )}
-                      <Button 
-              title="Quay lại" 
-              onPress={handleGoBack}
+          {currentTarget && !showLocationInfo && (
+            <Button 
+              title="Hiện thông tin" 
+              onPress={() => setShowLocationInfo(true)}
+              style={{ marginRight: 10 }}
             />
+          )}
+          <Button 
+            title="Quay lại" 
+            onPress={handleGoBack}
+          />
         </View>
       </View>
         
         {/* Location Info Panel */}
-        {currentTarget && (
+        {currentTarget && showLocationInfo && (
           <View style={styles.locationInfoContainer}>
             <LocationInfo
               currentLocation={location}
@@ -305,19 +313,20 @@ const LocationTrackerScreen = ({ navigation, route }) => {
               wordCode={wordCode}
               isSearchMode={isSearchMode}
               onShare={handleShareWordCode}
+              onClose={() => setShowLocationInfo(false)}
             />
           </View>
         )}
         
         {/* Compass component */}
-        {currentTarget && location && (
+        {/* {currentTarget && location && (
           <View style={styles.compassContainer}>
             <Compass 
               targetLocation={currentTarget}
               currentLocation={location}
             />
           </View>
-        )}
+        )} */}
     </SafeAreaView>
   );
 };
@@ -425,13 +434,13 @@ const styles = StyleSheet.create({
   },
   compassContainer: {
     position: 'absolute',
-    top: 100,
+    bottom: 200,
     right: 20,
     zIndex: 1000,
   },
   locationInfoContainer: {
     position: 'absolute',
-    top: 100,
+    top: 50,
     left: 20,
     right: 20,
     zIndex: 1000,

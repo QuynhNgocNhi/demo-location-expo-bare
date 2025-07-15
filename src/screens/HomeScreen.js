@@ -24,62 +24,7 @@ const HomeScreen = ({ navigation }) => {
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Lost & Found Buddy</Text>
-            <Text style={styles.subtitle}>
-              Tìm kiếm và chia sẻ vị trí bằng mã 3 từ tiếng Việt
-            </Text>
-          </View>
-
-          <View style={styles.featuresContainer}>
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>📍</Text>
-              <Text style={styles.featureTitle}>Lưu vị trí & Tạo mã</Text>
-              <Text style={styles.featureDescription}>
-                Lưu vị trí hiện tại và tạo mã 3 từ tiếng Việt để chia sẻ
-              </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🔍</Text>
-              <Text style={styles.featureTitle}>Tìm kiếm bằng mã</Text>
-              <Text style={styles.featureDescription}>
-                Nhập mã 3 từ để tìm vị trí và được hướng dẫn đi bộ
-              </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🗺️</Text>
-              <Text style={styles.featureTitle}>Bản đồ thông minh</Text>
-              <Text style={styles.featureDescription}>
-                Hiển thị vị trí trên bản đồ với marker và thông tin chi tiết
-              </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🧭</Text>
-              <Text style={styles.featureTitle}>Hướng dẫn chính xác</Text>
-              <Text style={styles.featureDescription}>
-                La bàn và mũi tên chỉ hướng đến vị trí cần tìm
-              </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>📏</Text>
-              <Text style={styles.featureTitle}>Khoảng cách real-time</Text>
-              <Text style={styles.featureDescription}>
-                Theo dõi khoảng cách từ vị trí hiện tại đến điểm đích
-              </Text>
-            </View>
-
-            <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🤝</Text>
-              <Text style={styles.featureTitle}>Chia sẻ dễ dàng</Text>
-              <Text style={styles.featureDescription}>
-                Chia sẻ mã 3 từ đơn giản cho bạn bè và người thân
-              </Text>
-            </View>
-          </View>
+          
 
           <View style={styles.actionButtons}>
             <TouchableOpacity
@@ -107,23 +52,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.infoSection}>
-            <Text style={styles.infoTitle}>Cách sử dụng:</Text>
-            <View style={styles.infoSteps}>
-              <View style={styles.step}>
-                <Text style={styles.stepNumber}>1</Text>
-                <Text style={styles.stepText}>Lưu vị trí hiện tại để tạo mã 3 từ</Text>
-              </View>
-              <View style={styles.step}>
-                <Text style={styles.stepNumber}>2</Text>
-                <Text style={styles.stepText}>Chia sẻ mã cho người cần tìm</Text>
-              </View>
-              <View style={styles.step}>
-                <Text style={styles.stepNumber}>3</Text>
-                <Text style={styles.stepText}>Người tìm nhập mã và được hướng dẫn</Text>
-              </View>
-            </View>
-          </View>
+         
         </View>
       </ScrollView>
     </SafeAreaView>

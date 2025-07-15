@@ -58,15 +58,23 @@ export const generateWordCode = (latitude, longitude) => {
     return 'meo.xanh.ban'; // Default fallback
   }
   
-  // Convert coordinates to a hash
-  const latHash = Math.abs(Math.floor(latitude * 1000000)) % ALL_WORDS.length;
-  const lngHash = Math.abs(Math.floor(longitude * 1000000)) % ALL_WORDS.length;
-  const combinedHash = Math.abs(Math.floor((latitude + longitude) * 1000000)) % ALL_WORDS.length;
+  // Normalize coordinates to 0-1 range
+  const normalizedLat = (latitude + 90) / 180; // Convert from [-90, 90] to [0, 1]
+  const normalizedLng = (longitude + 180) / 360; // Convert from [-180, 180] to [0, 1]
   
-  // Get 3 words
-  const word1 = ALL_WORDS[latHash];
-  const word2 = ALL_WORDS[lngHash];
-  const word3 = ALL_WORDS[combinedHash];
+  // Convert to word indices
+  const latIndex = Math.floor(normalizedLat * ALL_WORDS.length);
+  const lngIndex = Math.floor(normalizedLng * ALL_WORDS.length);
+  
+  // Use a combination for the third word to add some uniqueness
+  const combinedIndex = Math.floor(((normalizedLat + normalizedLng) / 2) * ALL_WORDS.length);
+  
+  // Get 3 words, ensuring indices are within bounds
+  const word1 = ALL_WORDS[Math.min(latIndex, ALL_WORDS.length - 1)];
+  const word2 = ALL_WORDS[Math.min(lngIndex, ALL_WORDS.length - 1)];
+  const word3 = ALL_WORDS[Math.min(combinedIndex, ALL_WORDS.length - 1)];
+  
+  console.log('Generated word code:', { latitude, longitude, normalizedLat, normalizedLng, latIndex, lngIndex, combinedIndex, word1, word2, word3 });
   
   return `${word1}.${word2}.${word3}`;
 };
@@ -74,9 +82,13 @@ export const generateWordCode = (latitude, longitude) => {
 // Parse a 3-word code back to approximate coordinates
 export const parseWordCode = (wordCode) => {
   try {
+    console.log('Parsing word code:', wordCode);
+    
     const words = wordCode.toLowerCase().split('.');
+    console.log('Split words:', words);
+    
     if (words.length !== 3) {
-      throw new Error('Invalid word code format');
+      throw new Error(`Invalid word code format: expected 3 words, got ${words.length}`);
     }
     
     // Find indices of words
@@ -84,16 +96,29 @@ export const parseWordCode = (wordCode) => {
     const index2 = ALL_WORDS.indexOf(words[1]);
     const index3 = ALL_WORDS.indexOf(words[2]);
     
+    console.log('Word indices:', { index1, index2, index3 });
+    
     if (index1 === -1 || index2 === -1 || index3 === -1) {
-      throw new Error('Invalid words in code');
+      const invalidWords = [];
+      if (index1 === -1) invalidWords.push(words[0]);
+      if (index2 === -1) invalidWords.push(words[1]);
+      if (index3 === -1) invalidWords.push(words[2]);
+      throw new Error(`Invalid words in code: ${invalidWords.join(', ')}`);
     }
     
-    // Convert back to approximate coordinates
-    // This is a simplified reverse mapping
-    const lat = (index1 / ALL_WORDS.length) * 180 - 90;
-    const lng = (index2 / ALL_WORDS.length) * 360 - 180;
+    // Convert back to approximate coordinates using the same logic as generation
+    // First two words represent latitude and longitude
+    const normalizedLat = index1 / ALL_WORDS.length;
+    const normalizedLng = index2 / ALL_WORDS.length;
     
-    return { latitude: lat, longitude: lng };
+    // Convert back to actual coordinates
+    const lat = (normalizedLat * 180) - 90;
+    const lng = (normalizedLng * 360) - 180;
+    
+    const result = { latitude: lat, longitude: lng };
+    console.log('Parsed coordinates:', { normalizedLat, normalizedLng, lat, lng });
+    
+    return result;
   } catch (error) {
     console.error('Error parsing word code:', error);
     return null;
@@ -102,12 +127,26 @@ export const parseWordCode = (wordCode) => {
 
 // Validate word code format
 export const isValidWordCode = (wordCode) => {
-  if (!wordCode || typeof wordCode !== 'string') return false;
+  if (!wordCode || typeof wordCode !== 'string') {
+    console.log('Invalid wordCode type:', typeof wordCode);
+    return false;
+  }
   
   const words = wordCode.toLowerCase().split('.');
-  if (words.length !== 3) return false;
+  console.log('Validating words:', words);
   
-  return words.every(word => ALL_WORDS.includes(word));
+  if (words.length !== 3) {
+    console.log('Invalid word count:', words.length);
+    return false;
+  }
+  
+  const validWords = words.every(word => ALL_WORDS.includes(word));
+  if (!validWords) {
+    const invalidWords = words.filter(word => !ALL_WORDS.includes(word));
+    console.log('Invalid words found:', invalidWords);
+  }
+  
+  return validWords;
 };
 
 // Get a random word code for testing
