@@ -204,62 +204,155 @@ export const parseWordCode = (wordCode) => {
       throw new Error(`Invalid word code format: expected 3 words, got ${words.length}`);
     }
     
-    // Extract base words from compound words
-    // Assuming format: "base modifier" for each word
-    const extractBaseWord = (compoundWord) => {
-      const parts = compoundWord.split(' ');
-      return parts[0]; // Return the first part as base word
+    // Extract base words from compound words - need to find actual UNIQUE_WORDS within compounds
+    // Since compound words are created as "baseWord modifierWord", we need to find
+    // which UNIQUE_WORDS are contained in each compound word
+    
+    const findWordsInCompound = (compoundWord) => {
+      // Try to find which UNIQUE_WORDS are contained in this compound
+      const possibleWords = [];
+      for (const word of UNIQUE_WORDS) {
+        if (compoundWord.includes(word)) {
+          possibleWords.push(word);
+        }
+      }
+      // Sort by length descending to prioritize longer matches
+      return possibleWords.sort((a, b) => b.length - a.length);
     };
     
-    const baseWord1 = extractBaseWord(words[0]);
-    const baseWord2 = extractBaseWord(words[1]);
-    const baseWord3 = extractBaseWord(words[2]);
+    const words1Candidates = findWordsInCompound(words[0]);
+    const words2Candidates = findWordsInCompound(words[1]);
+    const words3Candidates = findWordsInCompound(words[2]);
     
-    console.log('Extracted base words:', { baseWord1, baseWord2, baseWord3 });
+    console.log('Word candidates:', { words1Candidates, words2Candidates, words3Candidates });
     
-    // Find indices of base words
-    const index1 = UNIQUE_WORDS.indexOf(baseWord1);
-    const index2 = UNIQUE_WORDS.indexOf(baseWord2);
-    const index3 = UNIQUE_WORDS.indexOf(baseWord3);
+    // Based on generation logic:
+    // word1 = createCompoundWord(baseWord, modifierWord);
+    // word2 = createCompoundWord(modifierWord, thirdWord);
+    // word3 = createCompoundWord(thirdWord, baseWord);
     
-    console.log('Base word indices:', { index1, index2, index3 });
+    // From pattern: word1 contains baseWord and modifierWord
+    // word2 contains modifierWord and thirdWord
+    // word3 contains thirdWord and baseWord
     
-    if (index1 === -1 || index2 === -1 || index3 === -1) {
+    // Find common words between word1 and word3 (should be baseWord)
+    const baseWordCandidates = words1Candidates.filter(w => words3Candidates.includes(w));
+    // Find common words between word1 and word2 (should be modifierWord) 
+    const modifierWordCandidates = words1Candidates.filter(w => words2Candidates.includes(w));
+    // Find common words between word2 and word3 (should be thirdWord)
+    const thirdWordCandidates = words2Candidates.filter(w => words3Candidates.includes(w));
+    
+    console.log('Common word candidates:', { baseWordCandidates, modifierWordCandidates, thirdWordCandidates });
+    
+    // Take the best candidates (longest first)
+    const baseWord = baseWordCandidates[0];
+    const modifierWord = modifierWordCandidates[0];
+    const thirdWord = thirdWordCandidates[0];
+    
+    console.log('Reconstructed words:', { baseWord, modifierWord, thirdWord });
+    
+    // Find indices of words in UNIQUE_WORDS
+    const baseIndex = UNIQUE_WORDS.indexOf(baseWord);
+    const modifierIndex = UNIQUE_WORDS.indexOf(modifierWord);
+    const thirdIndex = UNIQUE_WORDS.indexOf(thirdWord);
+    
+    console.log('Word indices:', { baseIndex, modifierIndex, thirdIndex });
+    
+    if (baseIndex === -1 || modifierIndex === -1 || thirdIndex === -1) {
       const invalidWords = [];
-      if (index1 === -1) invalidWords.push(baseWord1);
-      if (index2 === -1) invalidWords.push(baseWord2);
-      if (index3 === -1) invalidWords.push(baseWord3);
-      throw new Error(`Invalid base words in code: ${invalidWords.join(', ')}`);
+      if (baseIndex === -1) invalidWords.push(baseWord);
+      if (modifierIndex === -1) invalidWords.push(modifierWord);
+      if (thirdIndex === -1) invalidWords.push(thirdWord);
+      throw new Error(`Invalid words in code: ${invalidWords.join(', ')}`);
     }
     
-    // Convert back to approximate coordinates using the same logic as generation
-    const normalizedLat = index1 / (UNIQUE_WORDS.length - 1);
-    const normalizedLng = index2 / (UNIQUE_WORDS.length - 1);
-    
-    // Convert back to actual coordinates within HCMC region
+    // Constants matching generation
     const HCMC_LAT_MIN = 10.3;
     const HCMC_LAT_MAX = 11.2;
     const HCMC_LNG_MIN = 106.2;
     const HCMC_LNG_MAX = 107.2;
     
-    // Calculate grid size for ~1m precision
     const GRID_SIZE_LAT = Math.floor((HCMC_LAT_MAX - HCMC_LAT_MIN) / 0.000009);
     const GRID_SIZE_LNG = Math.floor((HCMC_LNG_MAX - HCMC_LNG_MIN) / 0.000009);
     
-    // Convert word indices back to grid coordinates
-    const latGrid = Math.floor(normalizedLat * GRID_SIZE_LAT);
-    const lngGrid = Math.floor(normalizedLng * GRID_SIZE_LNG);
+         // Reverse the generation logic using direct mathematical approach
+     // latIndex = Math.floor(latGrid * UNIQUE_WORDS.length / GRID_SIZE_LAT) % UNIQUE_WORDS.length;
+     // lngIndex = Math.floor(lngGrid * UNIQUE_WORDS.length / GRID_SIZE_LNG) % UNIQUE_WORDS.length;
+     
+     // Calculate possible grid positions directly from indices
+     // Since we have modulo operations, there might be multiple solutions
+     let bestLatGrid = 0;
+     let bestLngGrid = 0;
+     let bestError = Infinity;
+     
+     // For modulo equation: latIndex = Math.floor(latGrid * UNIQUE_WORDS.length / GRID_SIZE_LAT) % UNIQUE_WORDS.length
+     // We can calculate multiple possible latGrid values
+     const possibleLatGrids = [];
+     const possibleLngGrids = [];
+     
+     // Calculate all possible latGrid values that could produce baseIndex
+     for (let k = 0; k < 10; k++) { // Check multiple modulo cycles
+       const latGridFloat = (baseIndex + k * UNIQUE_WORDS.length) * GRID_SIZE_LAT / UNIQUE_WORDS.length;
+       const latGridInt = Math.floor(latGridFloat);
+       if (latGridInt >= 0 && latGridInt < GRID_SIZE_LAT) {
+         possibleLatGrids.push(latGridInt);
+       }
+     }
+     
+     // Calculate all possible lngGrid values that could produce modifierIndex
+     for (let k = 0; k < 10; k++) { // Check multiple modulo cycles
+       const lngGridFloat = (modifierIndex + k * UNIQUE_WORDS.length) * GRID_SIZE_LNG / UNIQUE_WORDS.length;
+       const lngGridInt = Math.floor(lngGridFloat);
+       if (lngGridInt >= 0 && lngGridInt < GRID_SIZE_LNG) {
+         possibleLngGrids.push(lngGridInt);
+       }
+     }
+     
+     console.log('Possible grid positions:', { 
+       possibleLatGrids: possibleLatGrids.slice(0, 5), 
+       possibleLngGrids: possibleLngGrids.slice(0, 5),
+       totalLatCandidates: possibleLatGrids.length,
+       totalLngCandidates: possibleLngGrids.length
+     });
+     
+     // Test all combinations of possible grid positions
+     for (const latGrid of possibleLatGrids) {
+       for (const lngGrid of possibleLngGrids) {
+         // Verify this combination produces the correct indices
+         const calcLatIndex = Math.floor(latGrid * UNIQUE_WORDS.length / GRID_SIZE_LAT) % UNIQUE_WORDS.length;
+         const calcLngIndex = Math.floor(lngGrid * UNIQUE_WORDS.length / GRID_SIZE_LNG) % UNIQUE_WORDS.length;
+         const calcCombinedIndex = Math.floor(((latGrid * 37 + lngGrid * 73) % (GRID_SIZE_LAT + GRID_SIZE_LNG)) * UNIQUE_WORDS.length / (GRID_SIZE_LAT + GRID_SIZE_LNG)) % UNIQUE_WORDS.length;
+         
+         const error = Math.abs(calcLatIndex - baseIndex) + 
+                      Math.abs(calcLngIndex - modifierIndex) + 
+                      Math.abs(calcCombinedIndex - thirdIndex);
+         
+         if (error < bestError) {
+           bestError = error;
+           bestLatGrid = latGrid;
+           bestLngGrid = lngGrid;
+           
+           // If we found exact match, we can stop
+           if (error === 0) break;
+         }
+       }
+       if (bestError === 0) break;
+     }
+     
+     console.log('Direct calculation result:', { bestLatGrid, bestLngGrid, bestError });
+    
+    console.log('Best grid match:', { bestLatGrid, bestLngGrid, bestError });
     
     // Convert grid coordinates back to normalized coordinates
-    const clampedLat = latGrid / GRID_SIZE_LAT;
-    const clampedLng = lngGrid / GRID_SIZE_LNG;
+    const clampedLat = bestLatGrid / GRID_SIZE_LAT;
+    const clampedLng = bestLngGrid / GRID_SIZE_LNG;
     
     // Convert back to actual coordinates
     const lat = (clampedLat * (HCMC_LAT_MAX - HCMC_LAT_MIN)) + HCMC_LAT_MIN;
     const lng = (clampedLng * (HCMC_LNG_MAX - HCMC_LNG_MIN)) + HCMC_LNG_MIN;
     
     // Add small offset based on third word for sub-grid precision
-    const thirdWordWeight = index3 / (UNIQUE_WORDS.length - 1);
+    const thirdWordWeight = thirdIndex / (UNIQUE_WORDS.length - 1);
     const latOffset = (thirdWordWeight - 0.5) * 0.000009; // ±1m offset
     const lngOffset = (thirdWordWeight - 0.5) * 0.000009;
     
@@ -269,10 +362,11 @@ export const parseWordCode = (wordCode) => {
     const result = { latitude: finalLat, longitude: finalLng };
     console.log('Parsed coordinates:', { 
       wordCode,
-      baseWord1, baseWord2, baseWord3,
-      index1, index2, index3,
-      normalizedLat, normalizedLng, 
-      latGrid, lngGrid, GRID_SIZE_LAT, GRID_SIZE_LNG,
+      baseWord, modifierWord, thirdWord,
+      baseIndex, modifierIndex, thirdIndex,
+      bestLatGrid, bestLngGrid, bestError,
+      GRID_SIZE_LAT, GRID_SIZE_LNG,
+      clampedLat, clampedLng,
       lat, lng, finalLat, finalLng,
       totalWords: UNIQUE_WORDS.length,
       precision: '~1m x 1m through word combinations'
@@ -300,21 +394,45 @@ export const isValidWordCode = (wordCode) => {
     return false;
   }
   
-  // Check if each compound word contains valid base words
-  const extractBaseWord = (compoundWord) => {
-    const parts = compoundWord.split(' ');
-    return parts[0];
+  // Extract words using the same logic as parsing
+  const findWordsInCompound = (compoundWord) => {
+    const possibleWords = [];
+    for (const word of UNIQUE_WORDS) {
+      if (compoundWord.includes(word)) {
+        possibleWords.push(word);
+      }
+    }
+    return possibleWords.sort((a, b) => b.length - a.length);
   };
   
-  const baseWords = words.map(extractBaseWord);
-  const validWords = baseWords.every(word => UNIQUE_WORDS.includes(word));
-  
-  if (!validWords) {
-    const invalidWords = baseWords.filter(word => !UNIQUE_WORDS.includes(word));
-    console.log('Invalid base words found:', invalidWords);
+  try {
+    const words1Candidates = findWordsInCompound(words[0]);
+    const words2Candidates = findWordsInCompound(words[1]);
+    const words3Candidates = findWordsInCompound(words[2]);
+    
+    // Find common words using the same pattern matching as parsing
+    const baseWordCandidates = words1Candidates.filter(w => words3Candidates.includes(w));
+    const modifierWordCandidates = words1Candidates.filter(w => words2Candidates.includes(w));
+    const thirdWordCandidates = words2Candidates.filter(w => words3Candidates.includes(w));
+    
+    // Check if we found valid candidates for all three words
+    const hasValidBase = baseWordCandidates.length > 0;
+    const hasValidModifier = modifierWordCandidates.length > 0;
+    const hasValidThird = thirdWordCandidates.length > 0;
+    
+    if (!hasValidBase || !hasValidModifier || !hasValidThird) {
+      console.log('Missing word candidates:', { 
+        baseWordCandidates, 
+        modifierWordCandidates, 
+        thirdWordCandidates 
+      });
+    }
+    
+    return hasValidBase && hasValidModifier && hasValidThird;
+  } catch (error) {
+    console.log('Error validating word code:', error);
+    return false;
   }
-  
-  return validWords;
 };
 
 // Get a random word code for testing
